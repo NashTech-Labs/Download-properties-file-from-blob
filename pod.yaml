@@ -1,0 +1,32 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: blob-download
+spec:
+  initContainers:
+    - name: download-container
+      image: mcr.microsoft.com/azure-cli
+      command: ["/bin/sh", "-c"]
+      args:
+        - |
+          az storage blob download-batch --destination /tmp --source "url-for-az-container" --account-name "storage-account" --account-key "key-for-storage"
+      volumeMounts: 
+        - name: downloaded-files
+          mountPath: /tmp
+  containers:
+    - name: main-container
+      image: mcr.microsoft.com/azure-cli
+      command:
+        - "/bin/sh"
+        - "-c"
+      args:
+        - |
+          az aks install-cli
+          kubectl version
+          tail -f /dev/null  
+      volumeMounts:
+        - name: downloaded-files
+          mountPath: /tmp
+  volumes:
+    - name: downloaded-files
+      emptyDir: {}
